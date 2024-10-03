@@ -1,5 +1,5 @@
 Option _Explicit
-'$Include:'L:\Programming\$LIBRARY\Common_Dialog_Prefix.bi'
+
 Width 15, 9
 
 
@@ -23,5 +23,5 @@ Loop Until InKey$ <> ""
 End
 
 
-'$Include:'L:\Programming\$LIBRARY\Common_Dialog_Suffix.bi'
+
 
