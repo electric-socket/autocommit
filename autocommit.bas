@@ -3,7 +3,9 @@ Option _Explicit
 ' Thursday, October 5, 2024
 
 ' This program opens a configuration file located in either the current directory
-' (The one this program was invoked from) or the specified directory in the command line
+' (The one this program was invoked from) or the specified directory in the command line.
+' We read the version number including build number (the last dotted decimal)
+' bump it up by 1, then rewrite it back
 
 '$Include:'Version.bi'
 Const UCa = "A"
@@ -13,7 +15,7 @@ Const Quote = Chr$(34) ' "
 Const FALSE = 0
 Const TRUE = Not FALSE
 
-Dim As String TargetFile, TargetDateLine, TargetSourceLine
+Dim As String TargetFile, TargetDateLine, TargetSourceLine, GitLocation, GitCommand
 
 ' The following are the valwes this program uses
 ' If you don't like them, change them and recompile
@@ -26,8 +28,8 @@ $If WIN Then
     Dim As String TargetFileVersion
     TargetFileVersion = "$VersionInfo:FileVersion="
 $End If
-
-
+GitLocation = "C:\Program Files\Git\cmd\git.exe "
+GitCommand = ""
 
 
 
