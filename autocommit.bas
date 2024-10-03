@@ -8,7 +8,7 @@ Option _Explicit
 ' bump it up by 1, then rewrite it back
 
 '$Include:'Version.bi'
-'$include:'L:\Programing\$LIBRARY\errors.bi'
+'$Include:'L:\Programming\$LIBRARY\ERRORS.bi'
 Const UCa = "A"
 Const UCz = "Z"
 Const Underscore = Asc("_")
@@ -46,6 +46,7 @@ If _CommandCount <> 0 Then ' Process command
     If UCase$(Command$(1)) = "-H" Or UCase$(Command$(1)) = "-H" Then Help
     ' Otherwise,,,
     Target = Command$(1) ' Get work directory
+    ChDir Target
 End If
 Print "Autoccommit Ver. "; Version; " ("; VersionDate; ")"
 
@@ -60,9 +61,17 @@ On Error GoTo Error1
 Open TargetFile For Input As #InF
 
 
+GoTo Start
+Recover:
+Print "File "; TargetFile; " not found, creating."
+
+
+
 
 ' Start the display
+Start:
 Width 15, 9
+Cls
 
 
 
@@ -86,6 +95,10 @@ End
 ' Primary Error handler
 Error1:
 ER = Err: EL = _ErrorLine
+If ER = ERR_FILE_NOT_FOUND Then Resume Recover
+If ER = ERR_PATH_NOT_FOUND Then Resume BadDirectory
+
+
 Resume Quit
 
 
@@ -94,7 +107,8 @@ Quit:
 Print "?Error"; ER; "when "; ErrF; " on line"; EL; "described as "
 Print _ErrorMessage$(ER)
 End
-
+BadDirectory:
+Print "?Directory '"; Target; " does not exist."
 
 
 End
