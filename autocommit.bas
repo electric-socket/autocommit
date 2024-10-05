@@ -1,3 +1,5 @@
+' Unciomment next line for production
+'$let prod=1
 Option _Explicit
 ' Autocommit by Paul Robinson
 ' Thursday, October 5, 2024
@@ -120,7 +122,7 @@ ErrF = "Opening version file"
 
 
 Open TargetFile For Input As #InF
-Print "Opening Version Info"
+Print "Opening Version Info file"
 TargetSourceLineCount = 0
 TargetDateLineCount = 0
 TargetFileVerCount = 0
@@ -128,10 +130,16 @@ TargetDayLineCount = 0
 LineCount = 0
 While Not EOF(InF)
     LineCount = LineCount + 1
+    $If PROD = UNDEFINED Then
+        Print "DBG01-reading record #"; LineCount
+    $End If
     ReDim _Preserve FileLine(LineCount)
-    Line Input FileLine(LineCount)
+    Line Input #InF, FileLine(LineCount)
     ' Version No. / revision no. should be ahead of any other declarations
     If Not TargetSourceLineCount Then 'Have not found it
+        $If PROD = UNDEFINED Then
+            Print "DBG02-target check"
+        $End If
         I = InStr(FileLine(LineCount), TargetSourceLine)
         If I Then ' Found version
             V = InStr(FileLine(LineCount), Quote) + 1
@@ -147,6 +155,9 @@ While Not EOF(InF)
         End If
     End If ' optional: Compile date, always replaced with todays date
     If Not TargetDateLineCount Then
+        $If PROD = UNDEFINED Then
+            Print "DBG03-date check"
+        $End If
         If InStr(FileLine(LineCount), TargetDateLine) Then
             FileLine(LineCount) = TargetDateLine + Quote + TodaysDate + Quote ' Replace with today
             TargetDateLineCount = LineCount ' Don't need to look again
@@ -154,6 +165,9 @@ While Not EOF(InF)
         End If
     End If ' opional: version number for Windows
     If Not TargetFileVerCount Then
+        $If PROD = UNDEFINED Then
+            Print "DBG04-opt windows ver"
+        $End If
         If InStr(FileLine(LineCount), TargetFileVersion) Then
             FileLine(LineCount) = TargetFileVersion + "'" + UpdateLevel + "'"
             TargetFileVerCount = LineCount
@@ -161,6 +175,9 @@ While Not EOF(InF)
         End If
     End If 'Optional: Day of week
     If Not TargetDayLineCount Then
+        $If PROD = UNDEFINED Then
+            Print "DBG05-opt day"
+        $End If
         If InStr(FileLine(LineCount), TargetDayLine) Then
             FileLine(LineCount) = TargetDayLine + Quote + TodaysDay + Quote
             TargetDayLineCount = LineCount
@@ -168,7 +185,11 @@ While Not EOF(InF)
     End If
 Wend
 Close #InF
+
 If ReadOnly Then Return
+$If PROD = UNDEFINED Then
+    Print "DBG06-rewrite"
+$End If
 
 ' rewrite change
 Open TargetFile For Output As #OutF
