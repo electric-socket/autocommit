@@ -9,6 +9,7 @@ Option _Explicit
 
 '$Include:'Version.bi'
 '$Include:'L:\Programming\$LIBRARY\ERRORS.bi'
+'$Include:'datesetup.bi'
 Const UCa = "A"
 Const UCz = "Z"
 Const Underscore = Asc("_")
@@ -40,8 +41,8 @@ GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 
 _PaletteColor 3, _RGB32(255, 167, 0) ' Orange
 Color 14 ' Yellow
-Dim As String FileLine, Target
-Dim As Integer InF, OutF, I, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount
+Dim As String FileLine, Target, UpdateLevel
+Dim As Integer InF, OutF, I, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue
 
 ' Setup for creatimg new file
 Read NewLineCount
@@ -66,6 +67,9 @@ OutF = FreeFile
 ErrF = "Opening version file"
 
 Open TargetFile For Input As #InF
+Print "Opening Version Info"
+TargetSourceLineCount = 0
+TargetDateLineCount = 0
 While Not EOF(InF)
     LineCount = LineCount + 1
     ReDim _Preserve FileLine(LineCount)
@@ -73,19 +77,23 @@ While Not EOF(InF)
     ' Version No. should be ahead of any other declarations
     If Not TargetSourceLineCount Then 'Have not found it
         I = InStr(FileLine(LineCount), TargetSourceLine)
-        if I Then ' Found version
-
-
-            TargetSourceLineCount = LineCount
+        If I Then ' Found version
+            I = _InStrRev(FileLine(LineCount), ".") ' Find last period
+            UpdateLevel = Mid$(FileLine(LineCount), I + 1, Len(FileLine(LineCount))) ' Pull off revision strimg
+            UpdateValue = Val(UpdateLevel) ' Extract revision value
+            UpdateValue = UpdateValue + 1 ' Imcrement revision no.
+            UpdateLevel = Left$(FileLine(LineCount), I) + Str$(UpdateValue) ' Put back new version
+            TargetSourceLineCount = LineCount ' Don't need to look again
             _Continue
         End If
     End If
     If Not TargetDateLineCount Then
         If InStr(FileLine(LineCount), TargetDateLine) Then
-
-
+            FileLine(LineCount) = TargetDateLine + Quote + TodaysDate + Quote ' Replace with today
+            TargetDateLineCount = LineCount ' Don't need to look again
         End If
     End If
+
 
 Wend
 Close #InF

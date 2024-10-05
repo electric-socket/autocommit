@@ -1,12 +1,12 @@
 $IncludeOnce
 ' Leave the next line alone, it is automatically adjusted
-Const Version = "1.0.12"
+Const Version = "1.0.13"
 ' Remove the next line if you don't save date
 $Let VERSIONDATE = TRUE
-Const VersionDate = "Oct 3, 2024"
+Const VersionDate = "October 5, 2024"
 ' Remove the next line if you don't save day of week
 $Let VERSIONDAY = TRUE
-Const VersionDay = "Wed"
+Const VersionDay = "Saturday"
 ' This block is only used on Windows
 $If WIN Then
     ' The next line will be automatically replaced
