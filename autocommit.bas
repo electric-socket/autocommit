@@ -42,7 +42,7 @@ GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 _PaletteColor 3, _RGB32(255, 167, 0) ' Orange
 Color 14 ' Yellow
 Dim As String FileLine, Target, UpdateLevel
-Dim As Integer InF, OutF, I, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue
+Dim As Integer InF, OutF, I, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount
 
 ' Setup for creatimg new file
 Read NewLineCount
@@ -62,41 +62,6 @@ Print "AutoCommit Ver. "; Version; " ("; VersionDate; ")"
 
 InF = FreeFile
 OutF = FreeFile
-
-'Describe what we're doing if error occurred
-ErrF = "Opening version file"
-
-Open TargetFile For Input As #InF
-Print "Opening Version Info"
-TargetSourceLineCount = 0
-TargetDateLineCount = 0
-While Not EOF(InF)
-    LineCount = LineCount + 1
-    ReDim _Preserve FileLine(LineCount)
-    Line Input FileLine(LineCount)
-    ' Version No. should be ahead of any other declarations
-    If Not TargetSourceLineCount Then 'Have not found it
-        I = InStr(FileLine(LineCount), TargetSourceLine)
-        If I Then ' Found version
-            I = _InStrRev(FileLine(LineCount), ".") ' Find last period
-            UpdateLevel = Mid$(FileLine(LineCount), I + 1, Len(FileLine(LineCount))) ' Pull off revision strimg
-            UpdateValue = Val(UpdateLevel) ' Extract revision value
-            UpdateValue = UpdateValue + 1 ' Imcrement revision no.
-            UpdateLevel = Left$(FileLine(LineCount), I) + Str$(UpdateValue) ' Put back new version
-            TargetSourceLineCount = LineCount ' Don't need to look again
-            _Continue
-        End If
-    End If
-    If Not TargetDateLineCount Then
-        If InStr(FileLine(LineCount), TargetDateLine) Then
-            FileLine(LineCount) = TargetDateLine + Quote + TodaysDate + Quote ' Replace with today
-            TargetDateLineCount = LineCount ' Don't need to look again
-        End If
-    End If
-
-
-Wend
-Close #InF
 
 
 
@@ -137,6 +102,71 @@ Do
     'Exit Via ALT-F4
 Loop ' Until InKey$ <> ""
 End
+
+Revise:
+
+'Revise version number
+ErrF = "Opening version file"
+
+Open TargetFile For Input As #InF
+Print "Opening Version Info"
+TargetSourceLineCount = 0
+TargetDateLineCount = 0
+TargetFileVerCount = 0
+TargetDayLineCount = 0
+While Not EOF(InF)
+    LineCount = LineCount + 1
+    ReDim _Preserve FileLine(LineCount)
+    Line Input FileLine(LineCount)
+    ' Version No. should be ahead of any other declarations
+    If Not TargetSourceLineCount Then 'Have not found it
+        I = InStr(FileLine(LineCount), TargetSourceLine)
+        If I Then ' Found version
+            V = InStr(FileLine(LineCount), Quote) + 1
+            I = _InStrRev(FileLine(LineCount), ".") ' Find last period
+            UpdateLevel = Mid$(FileLine(LineCount), I + 1, Len(FileLine(LineCount))) ' Pull off revision strimg
+            UpdateValue = Val(UpdateLevel) ' Extract revision value
+            UpdateValue = UpdateValue + 1 ' Imcrement revision no.
+            ' No longer need updatelevel, reuse
+            UpdateLevel = Mid$(FileLine(LineCount), V, I - V) + Str$(UpdateValue)
+            FileLine(LineCount) = Left$(FileLine(LineCount), I) + Str$(UpdateValue) ' Put back new version
+            TargetSourceLineCount = LineCount ' Don't need to look again
+            _Continue
+        End If
+    End If
+    If Not TargetDateLineCount Then
+        If InStr(FileLine(LineCount), TargetDateLine) Then
+            FileLine(LineCount) = TargetDateLine + Quote + TodaysDate + Quote ' Replace with today
+            TargetDateLineCount = LineCount ' Don't need to look again
+            _Continue
+        End If
+    End If
+    If Not TargetFileVerCount Then
+        If InStr(FileLine(LineCount), TargetFileVersion) Then
+            FileLine(LineCount) = TargetFileVersion + "'" + UpdateLevel + "'"
+            TargetFileVerCount = LineCount
+            _Continue
+        End If
+    End If
+    If Not TargetDayLineCount Then
+        If InStr(FileLine(LineCount), TargetDayLine) Then
+            FileLine(LineCount) = TargetDayLine + Quote + TodaysDay + Quote
+            TargetDayLineCount = LineCount
+        End If
+    End If
+Wend
+Close #InF
+Open TargetFile For Output As #OutF
+For I = 1 To LineCount
+    Print #OutF, FileLine(I)
+Next
+Close #OutF
+
+
+Return
+
+
+
 ' Primary Error handler
 Error1:
 ER = Err: EL = _ErrorLine
