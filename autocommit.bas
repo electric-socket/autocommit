@@ -5,7 +5,8 @@ Option _Explicit
 ' This program opens a configuration file located in either the current directory
 ' (The one this program was invoked from) or the specified directory in the command line.
 ' We read the version number including build number (the last dotted decimal)
-' bump it up by 1, then rewrite it back
+' bump it up by 1, rewrite it back, then do a commit to the git repository.
+' Wait until clicked on, then do it again.
 
 '$Include:'Version.bi'
 '$Include:'L:\Programming\$LIBRARY\ERRORS.bi'
@@ -34,7 +35,7 @@ TargetDayLine = "Const VersionDay=" '   Optional field replaced with today's day
 
 ' This only used on Windows
 Dim As String TargetFileVersion
-TargetFileVersion = "$VersionInfo:FileVersion=" ' Optional field replaced with Sourelinr value
+TargetFileVersion = "$VersionInfo:FileVersion=" ' Optional field replaced with TargetSourcelinr value
 
 GitLocation = "C:\Program Files\Git\cmd\git.exe " ' Location of Git executable
 GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
@@ -42,11 +43,11 @@ GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 _PaletteColor 3, _RGB32(255, 167, 0) ' Orange
 Color 14 ' Yellow
 Dim As String FileLine, Target, UpdateLevel
-Dim As Integer InF, OutF, I, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount
+Dim As Integer InF, OutF, I, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly
 
 ' Setup for creatimg new file
 Read NewLineCount
-Dim As String NewLines(0)
+Dim As String NewLines(NewLineCount)
 For I = 1 To NewLineCount
     Read NewLines(I)
 Next
@@ -63,19 +64,19 @@ Print "AutoCommit Ver. "; Version; " ("; VersionDate; ")"
 InF = FreeFile
 OutF = FreeFile
 
-
-
+'Initialize values
+ReadOnly = TRUE
+GoSub Revise
 ' Start the display
 Start:
 Width 20, 10
+ReadOnly = FALSE
+
 Cls
-
-
-
 
 Print "ÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·"
 Print "º Current Version º"
-Print "º 000.000.000.000 º"
+Print "º "; Right$(Space$(16) + UpdateLevel, 16); " º"
 Print "º   Click here    º"
 Print "º    to commit    º"
 Print "º                 º"
@@ -92,11 +93,12 @@ Do
             ' Print Version No.
             Locate 3, 3
 
+            GoSub Revise
+            Print "Would be"
+
 
             'restore after commit
-            Locate 1, 10
-            Print "Ready        "
-
+            GoTo Start
         End If
     End If
     'Exit Via ALT-F4
@@ -108,17 +110,27 @@ Revise:
 'Revise version number
 ErrF = "Opening version file"
 
+' When this finishes:
+
+'  if readonly, file is not rewrtten
+'  updatelevel is either
+'   the current revision number (if readonly)
+'     or
+'   the new revision number
+
+
 Open TargetFile For Input As #InF
 Print "Opening Version Info"
 TargetSourceLineCount = 0
 TargetDateLineCount = 0
 TargetFileVerCount = 0
 TargetDayLineCount = 0
+LineCount = 0
 While Not EOF(InF)
     LineCount = LineCount + 1
     ReDim _Preserve FileLine(LineCount)
     Line Input FileLine(LineCount)
-    ' Version No. should be ahead of any other declarations
+    ' Version No. / revision no. should be ahead of any other declarations
     If Not TargetSourceLineCount Then 'Have not found it
         I = InStr(FileLine(LineCount), TargetSourceLine)
         If I Then ' Found version
@@ -126,28 +138,28 @@ While Not EOF(InF)
             I = _InStrRev(FileLine(LineCount), ".") ' Find last period
             UpdateLevel = Mid$(FileLine(LineCount), I + 1, Len(FileLine(LineCount))) ' Pull off revision strimg
             UpdateValue = Val(UpdateLevel) ' Extract revision value
-            UpdateValue = UpdateValue + 1 ' Imcrement revision no.
+            If Not ReadOnly Then UpdateValue = UpdateValue + 1 ' Imcrement revision no.
             ' No longer need updatelevel, reuse
             UpdateLevel = Mid$(FileLine(LineCount), V, I - V) + Str$(UpdateValue)
             FileLine(LineCount) = Left$(FileLine(LineCount), I) + Str$(UpdateValue) ' Put back new version
             TargetSourceLineCount = LineCount ' Don't need to look again
             _Continue
         End If
-    End If
+    End If ' optional: Compile date, always replaced with todays date
     If Not TargetDateLineCount Then
         If InStr(FileLine(LineCount), TargetDateLine) Then
             FileLine(LineCount) = TargetDateLine + Quote + TodaysDate + Quote ' Replace with today
             TargetDateLineCount = LineCount ' Don't need to look again
             _Continue
         End If
-    End If
+    End If ' opional: version number for Windows
     If Not TargetFileVerCount Then
         If InStr(FileLine(LineCount), TargetFileVersion) Then
             FileLine(LineCount) = TargetFileVersion + "'" + UpdateLevel + "'"
             TargetFileVerCount = LineCount
             _Continue
         End If
-    End If
+    End If 'Optional: Day of week
     If Not TargetDayLineCount Then
         If InStr(FileLine(LineCount), TargetDayLine) Then
             FileLine(LineCount) = TargetDayLine + Quote + TodaysDay + Quote
@@ -156,6 +168,9 @@ While Not EOF(InF)
     End If
 Wend
 Close #InF
+If ReadOnly Then Return
+
+' rewrite change
 Open TargetFile For Output As #OutF
 For I = 1 To LineCount
     Print #OutF, FileLine(I)
