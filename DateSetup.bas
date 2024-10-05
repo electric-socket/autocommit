@@ -1,5 +1,4 @@
-
-Dim Shared As Integer Year, Month, Day, Hour, Minute, Second, Leap
+Option _Explicit
 Const Saturday = 0
 Const Sunday = Saturday + 1
 Const Monday = Sunday + 1
@@ -10,7 +9,9 @@ Const Friday = Thursday + 1
 
 Const January = 1, February = 2, March = 3, April = 4, May = 5, June = 6
 Const July = 7, August = 8, September = 9, October = 10, November = 11, December = 12
-Dim Shared MonthDays(1, December) As Integer, MonthNames(December) As String, DayNames(Friday) As String
+Dim Shared As Integer I, Year, Month, Day, TheYear, TheMonth, TheDay, Leap, MonthDays(1, December)
+Dim Shared As String TodaysDate,TodaysDay, MonthNames(December), DayNames(Friday)
+
 Dim D$
 D$ = Date$
 TheMonth = Val(Mid$(D$, 1, 2))
@@ -28,5 +29,33 @@ For Day = Saturday To Friday: Read DayNames(Day): Next
 
 MonthDays(1, February) = 29 'Adjust for leap year
 
-Dim YearStart(2020 to 2099) as _byte
+Data 14,6,0,1,12,4,5,6,10,2: ' 2020 - 2029
+Data 3,4,15,0,1,2,13,5,6,0: ' 2030 - 2039
+Data 11,3,4,5,16,1,2,3,14,6: ' 2040 - 2049
+Data 0,1,12,4,5,6,10,2,3,4: ' 2050 - 2059
+Data 15,0,1,2,13,5,6,0,11,3: ' 2060 - 2069
+Data 4,5,16,1,2,3,14,6,0,1: ' 2070 - 2079
+Data 12,4,5,6,10,2,3,4,15,0: ' 2080 - 2089
+Data 1,2,13,5,6,0,11,3,4,5: ' 2090 - 2099
+
+Dim As Integer YearStart(2020 To 2099), DayStart
+For I = 2020 To 2099: Read YearStart(I): Next
+DayStart = YearStart(TheYear) ' January 1, 1800 was a Wednesday
+If DayStart > 6 Then DayStart = DayStart - 10: Leap = 1
+' Now count the days
+For Month = January To December
+    For Day = 1 To MonthDays(Leap, Month) ' if leap year, uses alternate
+        If Month = TheMonth And Day = TheDay Then GoTo DateFound
+        DayStart = DayStart + 1
+        If DayStart = 7 Then DayStart = 0
+    Next
+Next
+DateFound:
+TodaysDate = MonthNames(TheMonth) + Str$(TheDay) + "," + Str$(TheYear)
+TodaysDay = DayNames(DayStart)
+
+
+
+
+
 

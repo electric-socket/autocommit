@@ -17,7 +17,8 @@ Const FALSE = 0
 Const TRUE = Not FALSE
 
 Dim As String TargetFile, TargetDateLine, TargetSourceLine, TargetDayLine
-Dim As String VersionString, GitLocation, GitCommand, ErrF, TodaysDate
+Dim As String VersionString, GitLocation, GitCommand, ErrF
+
 Dim As Long EL, ER
 ReDim As String FileLine(0)
 
@@ -28,19 +29,26 @@ TargetFile = "Version.bi" '             This is the file we arw going to edit
 TargetSourceLine = "Const Version=" '   This is the value we are going to read and change
 TargetDateLine = "Const VersionDate=" ' Optional field replaced with today's date       \
 TargetDayLine = "Const VersionDay=" '   Optional field replaced with today's day of week
-TodaysDate = Date$
+
 
 ' This only used on Windows
-$If WIN Then
-    Dim As String TargetFileVersion
-    TargetFileVersion = "$VersionInfo:FileVersion=" ' Optional field replaced with Sourelinr value
-$End If
+Dim As String TargetFileVersion
+TargetFileVersion = "$VersionInfo:FileVersion=" ' Optional field replaced with Sourelinr value
+
 GitLocation = "C:\Program Files\Git\cmd\git.exe " ' Location of Git executable
 GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 
-
+_PaletteColor 3, _RGB32(255, 167, 0) ' Orange
+Color 14 ' Yellow
 Dim As String FileLine, Target
-Dim As Integer InF, OutF, I, LineCount, TargetSourceLineCount, TargetDateLineCount
+Dim As Integer InF, OutF, I, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount
+
+' Setup for creatimg new file
+Read NewLineCount
+Dim As String NewLines(0)
+For I = 1 To NewLineCount
+    Read NewLines(I)
+Next
 
 On Error GoTo Error1
 If _CommandCount <> 0 Then ' Process command
@@ -49,7 +57,7 @@ If _CommandCount <> 0 Then ' Process command
     Target = Command$(1) ' Get work directory
     ChDir Target
 End If
-Print "Autoccommit Ver. "; Version; " ("; VersionDate; ")"
+Print "AutoCommit Ver. "; Version; " ("; VersionDate; ")"
 
 InF = FreeFile
 OutF = FreeFile
@@ -64,7 +72,8 @@ While Not EOF(InF)
     Line Input FileLine(LineCount)
     ' Version No. should be ahead of any other declarations
     If Not TargetSourceLineCount Then 'Have not found it
-        If InStr(FileLine(LineCount), TargetSourceLine) Then
+        I = InStr(FileLine(LineCount), TargetSourceLine)
+        if I Then ' Found version
 
 
             TargetSourceLineCount = LineCount
@@ -72,7 +81,7 @@ While Not EOF(InF)
         End If
     End If
     If Not TargetDateLineCount Then
-        If InStr(FileLine(LineCount), TargetTargetDateLine) Then
+        If InStr(FileLine(LineCount), TargetDateLine) Then
 
 
         End If
@@ -85,7 +94,7 @@ Close #InF
 
 ' Start the display
 Start:
-Width 20, 9
+Width 20, 10
 Cls
 
 
@@ -94,15 +103,26 @@ Cls
 Print "ÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·"
 Print "º Current Version º"
 Print "º 000.000.000.000 º"
-Print "º Click here º"
-Print "º  to commit º"
-Print "º            º"
-Print "ÓÄÄÄÄÄÄÄÄÄÄÄÄ½"
-Print "Ready"
+Print "º   Click here    º"
+Print "º    to commit    º"
+Print "º                 º"
+Print "ÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½"
+Print "Ready     "
+Print " (Alt-F4 to Close) "
 Do
     If _MouseInput Then
         If _MouseButton(1) Then
             ' Do something
+            Locate 1, 10
+            Print "Committing..."
+
+            ' Print Version No.
+            Locate 3, 3
+
+
+            'restore after commit
+            Locate 1, 10
+            Print "Ready        "
 
         End If
     End If
@@ -143,7 +163,8 @@ Open TargetFile For Output As #OutF
 
 
 
-
+' Default Version.bi
+Data 17
 Data $IncludeOnce
 Data ' Leave the next line alone,it is automatically adjusted
 Data Const Version = "0.0.1"
@@ -161,8 +182,15 @@ Data "$VersionInfo:LegalCopyright='&COPYRIGHT'"
 Data "$VersionInfo:CompanyName='&COMPANYNAME'"
 Data "$VersionInfo:InternalName='AutoCommit.bas'"
 Data $End If
-Data
+
+
+
 
 Sub Help
     Print "AutoCommit - Version "; Version; " of "; VersionDay; ", "; VersionDate
+
+
+
+
+    End
 End Sub
