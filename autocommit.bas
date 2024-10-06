@@ -11,7 +11,8 @@ Option _Explicit
 ' Wait until clicked on, then do it again.
 
 '$Include:'Version.bi'
-'$Include:'L:\Programming\$LIBRARY\ERRORS.bi'
+'Dim Shared ERR_TEXT$(520) ' iDE doesn't like it if dim is in include file
+'$Include:'ERRORS.bi'
 '$Include:'datesetup.bi'
 
 Const UCa = "A"
@@ -20,9 +21,13 @@ Const Underscore = Asc("_")
 Const Quote = Chr$(34) ' "
 Const FALSE = 0
 Const TRUE = Not FALSE
+Const StdColor = 14 ' Yellow
+Const SpecColor = 2 ' Green
+Const AltColor = 3 '  Reset to Orange
 
-Dim As String TargetFile, TargetDateLine, TargetSourceLine, TargetDayLine
-Dim As String VersionString, GitLocation, GitCommand, ErrF
+Dim Shared As String TargetFile
+Dim As String TargetDateLine, TargetSourceLine, TargetDayLine
+Dim As String GitLocation, GitCommand, ErrF
 
 Dim As Long EL, ER
 ReDim As String FileLine(0)
@@ -43,10 +48,10 @@ TargetFileVersion = "$VersionInfo:FileVersion=" ' Optional field replaced with T
 GitLocation = "C:\Program Files\Git\cmd\git.exe " ' Location of Git executable
 GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 
-_PaletteColor 3, _RGB32(255, 167, 0) ' Orange
-Color 14 ' Yellow
+_PaletteColor AltColor, _RGB32(255, 167, 0) ' Orange
+Color StdColor
 Dim As String FileLine, Target, VersionText
-Dim As Integer InF, OutF, I, S, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly, Temp
+Dim As Integer InF, OutF, I, S, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly
 
 ' Setup for creatimg new file
 Read NewLineCount
@@ -57,7 +62,9 @@ Next
 
 On Error GoTo Error1
 If _CommandCount <> 0 Then ' Process command
-    If UCase$(Command$(1)) = "-H" Or UCase$(Command$(1)) = "-H" Then Help
+    If Left$(UCase$(Command$(1)), 2) = "-H" Or _
+       Left$(UCase$(Command$(1)), 2) = "/H" Or _
+       Left$(UCase$(Command$(1)), 3) = "--H" Then Help
     ' Otherwise,,,
     Target = Command$(1) ' Get work directory
     ChDir Target
@@ -76,7 +83,7 @@ Width 20, 10
 ReadOnly = FALSE
 
 Cls
-
+Color AltColor
 Print "ÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·"
 Print "º Current Version º"
 Print "º "; Right$(Space$(15) + VersionText, 15); " º"
@@ -84,20 +91,21 @@ Print "º   Click here    º"
 Print "º    to commit    º"
 Print "º                 º"
 Print "ÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½"
-Print "Ready     "
-Print " (Alt-F4 to Close) "
+Color SpecColor: Print "Ready     "
+Color AltColor: Print " (Alt-F4 to Close) "
 Do
     If _MouseInput Then
         If _MouseButton(1) Then
             ' Do something
-            Locate 10, 1
-            Print "Committing..."
+            Locate 8, 1
+            Color SpecColor: Print "Committing...";
+            Color AltColor
             Input I
             ' Print Version No.
             Locate 3, 3
 
             GoSub Revise
-            Print "Would be"
+            Print "** DBG701-STUB: Would be COMMIT here"
 
 
             'restore after commit
@@ -204,15 +212,19 @@ Resume Quit
 
 
 Quit:
+Color SpecColor
 Print "?Error"; ER; "when "; ErrF; " on line"; EL; "described as "
 Print _ErrorMessage$(ER)
 End
 BadDirectory:
-Print "?Directory '"; Target; " does not exist.": End
+Color SpecColor
+Print "?Directory '"; Target; " does not exist."
+End
 Error2:
+Color SpecColor
 ER = Err: EL = _ErrorLine
 Print "?Can't create file "; TargetFile
-
+Print "due to error "; ERR_TEXT$(ER)
 
 
 End
@@ -220,7 +232,44 @@ End
 Recover:
 Print "File "; TargetFile; " not found, creating."
 On Error GoTo Error2
-Open TargetFile For Output As #OutF
+$If PROD Then
+    Open TargetFile For Output As #OutF
+$End If
+Info:
+Color SpecColor
+Print "Please provude initial information:"
+Print "  1. Give the: initial version. subversion. build. revision numbers of your program."
+Print "  You might not be using all of these, but at least two and at most all 4."
+Print "  Each value is separated from the others by a period, e.g. 1.0.5 would mean"
+Print "  Version 1, Subversion (or Build) 0,revision 5, while 0.1.3.1 would mean"
+Print "  Version 0, Subversion 1, Build 3, Revision 1."
+Color AltColor
+Input "    Provide Version number value to start: "; VersionText
+If VersionText = "" Then VersionText = "0.0.1"
+
+Dim Idate As String
+Do
+    Color SpecColor
+    Print "  Do you want to include date as part of version information, type Yes or No,"
+    Print "  Or press 'Enter' for YES."
+    Color AltColor
+    Print "    Provide date (Yes or No)", Idate
+    If Idate = "" Or Left$(UCase$(Idate), 1) = "Y" Then Idate = "Y": Exit Do
+    If Left$(UCase$(Idate), 1) = "N" Then Idate = "N": Exit Do
+Loop
+If Idate = "Y" Then
+    Dim iDay As String
+    Do
+        Color SpecColor
+        Print "Do you want to include day of week in version information, "
+        Color AltColor
+        Input "(Enter=Yes) Yes or No", iDay
+        If iDay = "" Or Left$(UCase$(iDay), 1) = "Y" Then iDay = "Y": Exit Do
+        If Left$(UCase$(iDay), 1) = "N" Then iDay = "N": Exit Do
+    Loop
+End If
+
+
 
 
 
@@ -247,13 +296,40 @@ Data "$VersionInfo:InternalName='&INTERNALNAME'"
 Data $End If
 
 
-
-
 Sub Help
+
+    Color SpecColor
     Print "AutoCommit - Version "; Version; " of "; VersionDay; ", "; VersionDate
 
+    Print " usage:"
+    Color AltColor: Print "   autocommit /H ";: Color SpecColor: Print "(or) ";
+    Color AltColor: Print "-h  ";: Color SpecColor: Print "(or) ";
+    Color AltColor: Print "--h  ";
+    Color SpecColor: Print "  This message "
+    Print "     (or)"
+    Color AltColor: Print "   autocommit [target_diretory]"
+    Color SpecColor: Print "     Autocommit will switch to that directory to operate. If no"
+    Print "     directory is specified, autocommit will use the directory where it"
 
-
-
+    Print "     is located. Autocommit will look for a file named '";
+    Color AltColor: Print TargetFile;
+    Color SpecColor:
+    Print "' which"
+    Print "     it will use to obtain version information. Then the program will"
+    Print "     display a small ";
+    Color AltColor: Print "display window ";
+    Color SpecColor: Print "which may be clicked upon to have it"
+    Print "     do a git commit of that current version of the files in that"
+    Print "     directory which have been added to the files to be tracked by the"
+    Print "     git source code management system. If the file does not exist in"
+    Print "     the directory where it is located (or the specified directory to"
+    Print "     use) Autocommit will create the file and ask for the default"
+    Print "     parameters."
+    Print
+    Print "     When the ";: Color AltColor: Print "display window ";
+    Color SpecColor: Print "is clicked on, Autocommit will add one to"
+    Print "     the revision number and request to git of a commit of all files"
+    Print "     changed since the last commit."
     End
 End Sub
+
