@@ -2,7 +2,7 @@
 '$let prod=1
 Option _Explicit
 ' Autocommit by Paul Robinson
-' Thursday, October 5, 2024
+' Wednesday, October 2, 2024
 
 ' This program opens a configuration file located in either the current directory
 ' (The one this program was invoked from) or the specified directory in the command line.
@@ -11,7 +11,6 @@ Option _Explicit
 ' Wait until clicked on, then do it again.
 
 '$Include:'Version.bi'
-'Dim Shared ERR_TEXT$(520) ' iDE doesn't like it if dim is in include file
 '$Include:'ERRORS.bi'
 '$Include:'datesetup.bi'
 
@@ -106,7 +105,7 @@ Do
 
             GoSub Revise
             Print "** DBG701-STUB: Would be COMMIT here"
-
+            Input I
 
             'restore after commit
             GoTo Start
@@ -191,6 +190,7 @@ Close #InF
 If ReadOnly Then Return
 
 ' rewrite change
+ErrF = "Replacing version file"
 Open TargetFile For Output As #OutF
 
 For I = 1 To LineCount
@@ -224,7 +224,7 @@ Error2:
 Color SpecColor
 ER = Err: EL = _ErrorLine
 Print "?Can't create file "; TargetFile
-Print "due to error "; ERR_TEXT$(ER)
+Print "due to error "; _ErrorMessage$(ER)
 
 
 End
@@ -241,36 +241,107 @@ Print "Please provude initial information:"
 Print "  1. Give the: initial version. subversion. build. revision numbers of your program."
 Print "  You might not be using all of these, but at least two and at most all 4."
 Print "  Each value is separated from the others by a period, e.g. 1.0.5 would mean"
-Print "  Version 1, Subversion (or Build) 0,revision 5, while 0.1.3.1 would mean"
+Print "  Version 1, Subversion (or Build) 0, revision 5, while 0.1.3.1 would mean"
 Print "  Version 0, Subversion 1, Build 3, Revision 1."
 Color AltColor
 Input "    Provide Version number value to start: "; VersionText
 If VersionText = "" Then VersionText = "0.0.1"
 
-Dim Idate As String
+Dim I$, Idate As Integer
 Do
     Color SpecColor
-    Print "  Do you want to include date as part of version information, type Yes or No,"
-    Print "  Or press 'Enter' for YES."
+    Print "  2. Do you want to include date as part of version information, type Yes or No,"
     Color AltColor
-    Print "    Provide date (Yes or No)", Idate
-    If Idate = "" Or Left$(UCase$(Idate), 1) = "Y" Then Idate = "Y": Exit Do
-    If Left$(UCase$(Idate), 1) = "N" Then Idate = "N": Exit Do
+    Input "(Enter=Yes) Yes or No", I$
+    If I$ = "" Or Left$(UCase$(I$), 1) = "Y" Then Idate = TRUE: Exit Do
+    If Left$(UCase$(I$), 1) = "N" Then Idate = FALSE: Exit Do
 Loop
-If Idate = "Y" Then
-    Dim iDay As String
+If Idate Then
+    Dim iDay As Integer
     Do
         Color SpecColor
-        Print "Do you want to include day of week in version information, "
+        Print "  3. Do you want to include day of week in version information, "
         Color AltColor
         Input "(Enter=Yes) Yes or No", iDay
-        If iDay = "" Or Left$(UCase$(iDay), 1) = "Y" Then iDay = "Y": Exit Do
-        If Left$(UCase$(iDay), 1) = "N" Then iDay = "N": Exit Do
+        If I$ = "" Or Left$(UCase$(I$), 1) = "Y" Then iDay = TRUE: Exit Do
+        If Left$(UCase$(I$), 1) = "N" Then iDay = FALSE: Exit Do
     Loop
 End If
+Dim iWin As Integer
+Do
+    Color SpecColor
+    Print "  4. Do you want to include Windows-specific information, "
+    Color AltColor
+    Input "(Enter=Yes) Yes or No", I$
+    If I$ = "" Or Left$(UCase$(I$), 1) = "Y" Then iWin = TRUE: Exit Do
+    If Left$(UCase$(I$), 1) = "N" Then iWin = FALSE: Exit Do
+Loop
+If iWin Then
+    Dim Copr As String
+    Color SpecColor
+    Print "  5. Specify value for LegalCopyright field. This may either"
+    Print "     be a copyright notice (which is no longer required) or may"
+    Print "     be a statement of an open-source license it is offered under,"
+    Print "     e.g. GPL v2 LICENSE, GPL v3 LICENSE, MIT LICENSE, etc."
+    Color AltColor
+    Input "  Type in value of LegalCopyright field", Copr
 
+    Dim Company As String
+    Color SpecColor
+    Print "  6. Specify value for CompanyName field. This would be your company"
+    Print "     if a work for hire, or your name or group's name."
+    Color AltColor
+    Input "  Type in value of CompanyName field", Company
 
+    Dim Internal As String
+    Color SpecColor
+    Print "  7. Specify value for InternalName field. This would be what you, your company, or"
+    Print "     group refer to it as, or the name by which it is distributed."
+    Color AltColor
+    Input "  Type in value of InternalName field", Internal
+End If
+I = 1
+While Not InStr(FileLine(I), " Version ")
+    Print #OutF, FileLine(I)
+    I = I + 1
+Wend
 
+Print #OutF, FileLine(I); VersionText; Quote
+
+I = I + 1
+While Not InStr(FileLine(I), " VERSIONDATE ")
+    Print #OutF, FileLine(I)
+    I = I + 1
+Wend
+If Idate Then
+    Print #OutF, FileLine(I)
+    Print #OutF, FileLine(I + 1); TodaysDate; Quote
+End If
+I = I + 2 ' if not including date, those 2 lines are skipped
+
+While Not InStr(FileLine(I), " VERSIONDAY ")
+    Print #OutF, FileLine(I)
+    I = I + 1
+Wend
+
+If iDay Then
+    Print #OutF, FileLine(I)
+    Print #OutF, FileLine(I + 1); TodaysDay; Quote
+End If
+I = I + 2 ' if not including day, those 2 lines are skipped
+
+If iWin Then
+    While Not InStr(FileLine(I), "FileVersion")
+        Print #OutF, FileLine(I)
+        I = I + 1
+    Wend
+    Print #OutF, FileLine(I); VersionText; "'": I = I + 1
+    Print #OutF, FileLine(I); Copr; "'": I = I + 1
+    Print #OutF, FileLine(I); Company; "'": I = I + 1
+    Print #OutF, FileLine(I); Internal; "'"
+End If
+Close #OutF
+GoTo Start
 
 
 
@@ -279,20 +350,20 @@ End If
 Data 17
 Data $IncludeOnce
 Data ' Leave the next line alone,it is automatically adjusted
-Data Const Version = "0.0.1"
+Data Const Version = "
 Data ' Remove the next line if you don't save date
 Data $Let VERSIONDATE = TRUE
-Data Const VersionDate = "&DATE"
+Data Const VersionDate = "
 Data ' Remove the next line if you don't save day of week
 Data $Let VERSIONDAY = TRUE
-Data Const VersionDay = "&DAY"
+Data Const VersionDay = "
 Data ' This block is only used on Windows
 Data $If WIN Then
 Data ' The next line will be automatically replaced
-Data "$VersionInfo:FileVersion='&VERSION'"
-Data "$VersionInfo:LegalCopyright='&COPYRIGHT'"
-Data "$VersionInfo:CompanyName='&COMPANYNAME'"
-Data "$VersionInfo:InternalName='&INTERNALNAME'"
+Data "$VersionInfo:FileVersion='"
+Data "$VersionInfo:LegalCopyright='"
+Data "$VersionInfo:CompanyName='"
+Data "$VersionInfo:InternalName='"
 Data $End If
 
 
