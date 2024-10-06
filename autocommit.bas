@@ -142,12 +142,24 @@ While Not EOF(InF)
         $End If
         I = InStr(FileLine(LineCount), TargetSourceLine)
         If I Then ' Found version
+            $If PROD = UNDEFINED Then
+                Print "DBG21-Found ver"
+            $End If
+
             V = InStr(FileLine(LineCount), Quote) + 1
             I = _InStrRev(FileLine(LineCount), ".") ' Find last period
             UpdateLevel = Mid$(FileLine(LineCount), I + 1, Len(FileLine(LineCount))) ' Pull off revision strimg
+            $If PROD = UNDEFINED Then
+                Print "DBG22-UpdateLevel="; UpdateLevel
+            $End If
+
             UpdateValue = Val(UpdateLevel) ' Extract revision value
             If Not ReadOnly Then UpdateValue = UpdateValue + 1 ' Imcrement revision no.
             ' No longer need updatelevel, reuse
+            $If PROD = UNDEFINED Then
+                Print "DBG23-UpdateValue="; UpdateValue
+            $End If
+
             UpdateLevel = Mid$(FileLine(LineCount), V, I - V) + Str$(UpdateValue)
             FileLine(LineCount) = Left$(FileLine(LineCount), I) + Str$(UpdateValue) ' Put back new version
             TargetSourceLineCount = LineCount ' Don't need to look again
@@ -159,6 +171,10 @@ While Not EOF(InF)
             Print "DBG03-date check"
         $End If
         If InStr(FileLine(LineCount), TargetDateLine) Then
+            $If PROD = UNDEFINED Then
+                Print "DBG31-TodaysDate="; TodaysDate
+            $End If
+
             FileLine(LineCount) = TargetDateLine + Quote + TodaysDate + Quote ' Replace with today
             TargetDateLineCount = LineCount ' Don't need to look again
             _Continue
@@ -167,6 +183,9 @@ While Not EOF(InF)
     If Not TargetFileVerCount Then
         $If PROD = UNDEFINED Then
             Print "DBG04-opt windows ver"
+        $End If
+        $If PROD = UNDEFINED Then
+            Print "DBG41-UpdateLevel="; UpdateLevel
         $End If
         If InStr(FileLine(LineCount), TargetFileVersion) Then
             FileLine(LineCount) = TargetFileVersion + "'" + UpdateLevel + "'"
@@ -179,10 +198,21 @@ While Not EOF(InF)
             Print "DBG05-opt day"
         $End If
         If InStr(FileLine(LineCount), TargetDayLine) Then
+            $If PROD = UNDEFINED Then
+                Print "DBG51-TodaysDay="; TodaysDay
+            $End If
+
             FileLine(LineCount) = TargetDayLine + Quote + TodaysDay + Quote
             TargetDayLineCount = LineCount
         End If
     End If
+    $If PROD = UNDEFINED Then
+        Print "DBG10A-Linecount="; LineCount
+        Print "dbg10B-UpdateLevel="; UpdateLevel
+        Print "DBG10-Pause"
+        Input I
+    $End If
+
 Wend
 Close #InF
 
