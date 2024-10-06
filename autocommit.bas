@@ -308,23 +308,25 @@ Sub Help
     Color SpecColor: Print "  This message "
     Print "     (or)"
     Color AltColor: Print "   autocommit [target_diretory]"
-    Color SpecColor: Print "     Autocommit will switch to that directory to operate. If no"
-    Print "     directory is specified, autocommit will use the directory where it"
+    Color SpecColor: Print "     Autocommit will switch to that directory to operate. If no directory"
+    Print "     is specified, autocommit will use the directory where it is located."
 
-    Print "     is located. Autocommit will look for a file named '";
+    Print "     Autocommit will look for a file named '";
     Color AltColor: Print TargetFile;
     Color SpecColor:
-    Print "' which"
-    Print "     it will use to obtain version information. Then the program will"
-    Print "     display a small ";
-    Color AltColor: Print "display window ";
-    Color SpecColor: Print "which may be clicked upon to have it"
-    Print "     do a git commit of that current version of the files in that"
-    Print "     directory which have been added to the files to be tracked by the"
-    Print "     git source code management system. If the file does not exist in"
-    Print "     the directory where it is located (or the specified directory to"
-    Print "     use) Autocommit will create the file and ask for the default"
-    Print "     parameters."
+    Print "' which it will use"
+    Print "     to obtain version information. Then the program will display a small"
+    Color AltColor
+    Print "     display window ";
+    Color SpecColor: Print "which may be clicked upon to have it do a git commit of"
+    Print "     that current version of the files in that directory which were changed"
+    Print "     and have been added to the files to be tracked by the git source code"
+    Print "     management system. If ";
+    Color AltColor: Print TargetFile;
+    Color SpecColor:
+    Print " does not exist in the directory where"
+    Print "     Autocommit is located (or the specified directory to use) Autocommit"
+    Print "     will create the file and ask for the default parameters."
     Print
     Print "     When the ";: Color AltColor: Print "display window ";
     Color SpecColor: Print "is clicked on, Autocommit will add one to"
