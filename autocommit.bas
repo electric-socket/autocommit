@@ -328,7 +328,7 @@ Sub Help
     Print
     Print "     When the ";: Color AltColor: Print "display window ";
     Color SpecColor: Print "is clicked on, Autocommit will add one to"
-    Print "     the revision number and request to git of a commit of all files"
+    Print "     the revision number and make a request to git of a commit of all files"
     Print "     changed since the last commit."
     End
 End Sub
