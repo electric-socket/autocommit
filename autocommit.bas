@@ -13,6 +13,7 @@ Option _Explicit
 '$Include:'Version.bi'
 '$Include:'L:\Programming\$LIBRARY\ERRORS.bi'
 '$Include:'datesetup.bi'
+
 Const UCa = "A"
 Const UCz = "Z"
 Const Underscore = Asc("_")
@@ -31,8 +32,8 @@ ReDim As String FileLine(0)
 
 TargetFile = "Version.bi" '             This is the file we arw going to edit
 TargetSourceLine = "Const Version = " + Quote '   This is the value we are going to read and change
-TargetDateLine = "Const VersionDate =" ' Optional field replaced with today's date       \
-TargetDayLine = "Const VersionDay =" '   Optional field replaced with today's day of week
+TargetDateLine = "Const VersionDate = " + Quote ' Optional field replaced with today's date       \
+TargetDayLine = "Const VersionDay = " + Quote '   Optional field replaced with today's day of week
 
 
 ' This only used on Windows
@@ -228,18 +229,34 @@ While Not EOF(InF)
 Wend
 Close #InF
 
-If ReadOnly Then Return
+
 $If PROD = UNDEFINED Then
     Print "DBG06-rewrite"
+$Else
+    If ReadOnly Then Return
 $End If
 
 ' rewrite change
-Open TargetFile For Output As #OutF
+$If PROD = UNDEFINED Then
+    Print "DBG61-Write Example"
+    If Not ReadOnly Then Open TargetFile For Output As #OutF
+$Else
+    Open TargetFile For Output As #OutF
+$End If
 For I = 1 To LineCount
-    Print #OutF, FileLine(I)
+    $If PROD = UNDEFINED Then
+        Print FileLine(I)
+    $Else
+        Print #OutF, FileLine(I)
+    $End If
 Next
-Close #OutF
 
+$If PROD = UNDEFINED Then
+    Print "DBG99-PAUSE"
+    Input I
+$Else
+    Close #OutF
+$End If
 
 Return
 
