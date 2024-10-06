@@ -30,9 +30,9 @@ ReDim As String FileLine(0)
 ' If you don't like them, change them and recompile
 
 TargetFile = "Version.bi" '             This is the file we arw going to edit
-TargetSourceLine = "Const Version=" '   This is the value we are going to read and change
-TargetDateLine = "Const VersionDate=" ' Optional field replaced with today's date       \
-TargetDayLine = "Const VersionDay=" '   Optional field replaced with today's day of week
+TargetSourceLine = "Const Version = " + Quote '   This is the value we are going to read and change
+TargetDateLine = "Const VersionDate =" ' Optional field replaced with today's date       \
+TargetDayLine = "Const VersionDay =" '   Optional field replaced with today's day of week
 
 
 ' This only used on Windows
@@ -45,7 +45,7 @@ GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 _PaletteColor 3, _RGB32(255, 167, 0) ' Orange
 Color 14 ' Yellow
 Dim As String FileLine, Target, UpdateLevel
-Dim As Integer InF, OutF, I, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly
+Dim As Integer InF, OutF, I, S, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly
 
 ' Setup for creatimg new file
 Read NewLineCount
@@ -131,13 +131,15 @@ LineCount = 0
 While Not EOF(InF)
     LineCount = LineCount + 1
     $If PROD = UNDEFINED Then
-        Print "DBG01-reading record #"; LineCount
+        Print "DBG01";
+        If ReadOnly Then Print " (R/O)";
+        Print "-reading record #"; LineCount
     $End If
     ReDim _Preserve FileLine(LineCount)
     Line Input #InF, FileLine(LineCount)
     $If PROD = UNDEFINED Then
         Print "DBG11-Linecount="; LineCount
-        Print "DBG12-FileLine(LineCount)=";FileLine(LineCount)
+        Print "DBG12-FileLine(LineCount)="; FileLine(LineCount)
     $End If
 
     ' Version No. / revision no. should be ahead of any other declarations
@@ -145,27 +147,40 @@ While Not EOF(InF)
         $If PROD = UNDEFINED Then
             Print "DBG02-target check"
         $End If
-        I = InStr(FileLine(LineCount), TargetSourceLine)
+        I = InStr(UCase$(FileLine(LineCount)), UCase$(TargetSourceLine))
+        $If PROD = UNDEFINED Then
+            Print "DBG21-TargetSourceLine="; TargetSourceLine
+        $End If
+
         If I Then ' Found version
             $If PROD = UNDEFINED Then
-                Print "DBG21-Found ver"
+                Print "DBG23-Found ver"
+            $End If
+            I = I + Len(TargetSourceLine)
+            S = I + 1 ' Char after first quote
+            $If PROD = UNDEFINED Then
+                Print "DBG24-1st "; Quote; "="; I; " VerStart="; V
             $End If
 
-            V = InStr(FileLine(LineCount), Quote) + 1
             I = _InStrRev(FileLine(LineCount), ".") ' Find last period
-            UpdateLevel = Mid$(FileLine(LineCount), I + 1, Len(FileLine(LineCount))) ' Pull off revision strimg
+            V = InStr(S, FileLine(LineCount), Quote) - 1 ' Char before last quote
             $If PROD = UNDEFINED Then
-                Print "DBG22-UpdateLevel="; UpdateLevel
+                Print "DBG24-last .="; I; " BeforeLast ";quote;" ="; V
+            $End If
+
+            UpdateLevel = Mid$(FileLine(LineCount), S, V - S) ' Pull off revision strimg
+            $If PROD = UNDEFINED Then
+                Print "DBG24-UpdateLevel="; UpdateLevel
             $End If
 
             UpdateValue = Val(UpdateLevel) ' Extract revision value
             If Not ReadOnly Then UpdateValue = UpdateValue + 1 ' Imcrement revision no.
             ' No longer need updatelevel, reuse
             $If PROD = UNDEFINED Then
-                Print "DBG23-UpdateValue="; UpdateValue
+                Print "DBG25-UpdateValue="; UpdateValue
             $End If
 
-            UpdateLevel = Mid$(FileLine(LineCount), V, I - V) + Str$(UpdateValue)
+            UpdateLevel = Mid$(FileLine(LineCount), V, I - V) + "." + Str$(UpdateValue)
             FileLine(LineCount) = Left$(FileLine(LineCount), I) + Str$(UpdateValue) ' Put back new version
             TargetSourceLineCount = LineCount ' Don't need to look again
             _Continue
@@ -289,7 +304,7 @@ Data ' The next line will be automatically replaced
 Data "$VersionInfo:FileVersion='&VERSION'"
 Data "$VersionInfo:LegalCopyright='&COPYRIGHT'"
 Data "$VersionInfo:CompanyName='&COMPANYNAME'"
-Data "$VersionInfo:InternalName='AutoCommit.bas'"
+Data "$VersionInfo:InternalName='&INTERNALNAME'"
 Data $End If
 
 
