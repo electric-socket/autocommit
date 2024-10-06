@@ -334,9 +334,9 @@ Sub Help
     Color AltColor: Print "     "; TargetFile;
     Color SpecColor:
     Print ", and make a request to git of a commit of all files"
-    Print "     changed since the last commit. It will then wait to be clicked on again,"
-    Print "     click the close box in the top right corner of the window, or press"
-    Print "     Alt-F4 to close."
+    Print "     changed since the last commit. It will then wait to be clicked on again."
+    Print "     When not needed, click the close box in the top right corner of the window,"
+    Print "     or press Alt-F4 to close."
     End
 End Sub
 
