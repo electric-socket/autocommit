@@ -135,6 +135,11 @@ While Not EOF(InF)
     $End If
     ReDim _Preserve FileLine(LineCount)
     Line Input #InF, FileLine(LineCount)
+    $If PROD = UNDEFINED Then
+        Print "DBG11-Linecount="; LineCount
+        Print "DBG12-FileLine(LineCount)=";FileLine(LineCount)
+    $End If
+
     ' Version No. / revision no. should be ahead of any other declarations
     If Not TargetSourceLineCount Then 'Have not found it
         $If PROD = UNDEFINED Then
