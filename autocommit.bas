@@ -44,7 +44,7 @@ GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 
 _PaletteColor 3, _RGB32(255, 167, 0) ' Orange
 Color 14 ' Yellow
-Dim As String FileLine, Target, UpdateLevel
+Dim As String FileLine, Target, VersionText
 Dim As Integer InF, OutF, I, S, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly, Temp
 
 ' Setup for creatimg new file
@@ -78,7 +78,7 @@ Cls
 
 Print "ÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·"
 Print "º Current Version º"
-Print "º "; Right$(Space$(16) + UpdateLevel, 16); " º"
+Print "º "; Right$(Space$(16) + VersionText, 16); " º"
 Print "º   Click here    º"
 Print "º    to commit    º"
 Print "º                 º"
@@ -115,7 +115,7 @@ ErrF = "Opening version file"
 ' When this finishes:
 
 '  if readonly, file is not rewrtten
-'  updatelevel is either
+'  VersionText is either
 '   the current revision number (if readonly)
 '     or
 '   the new revision number
@@ -156,29 +156,25 @@ While Not EOF(InF)
             $If PROD = UNDEFINED Then
                 Print "DBG23-Found ver"
             $End If
+            ' Extract version number
             I = I + Len(TargetSourceLine) ' Char after first quote
-            V = InStr(S, FileLine(LineCount), Quote) - 1 ' Char before last quote
-            S = V - I + 1
-            $If PROD = UNDEFINED Then
-                Print "DBG24-Verstart="; I; " VerEnd="; S; "Len="; S
-                Input "press enter"; Temp
-            $End If
+            V = InStr(I, FileLine(LineCount), Quote) - 1 ' Char before last quote
+            S = V - I + 1 ' Length, i.e. Size of field
 
-
-            UpdateLevel = Mid$(FileLine(LineCount), S, V - S) ' Pull off revision strimg
-            $If PROD = UNDEFINED Then
-                Print "DBG26-UpdateLevel="; UpdateLevel
-            $End If
-
-            UpdateValue = Val(UpdateLevel) ' Extract revision value
+            VersionText = Mid$(FileLine(LineCount), I, S) ' Pull off revision strimg
+            I = _InStrRev(VersionText, ".") ' Find last period
+            Dim As String Revision
+            Revision = Mid$(VersionText, I + 1, Len(VersionText))
+            VersionText = Left$(VersionText, I) ' All through last period
+            UpdateValue = Val(Revision) ' Extract revision value
             If Not ReadOnly Then UpdateValue = UpdateValue + 1 ' Imcrement revision no.
             ' No longer need updatelevel, reuse
             $If PROD = UNDEFINED Then
                 Print "DBG26-UpdateValue="; UpdateValue
             $End If
 
-            UpdateLevel = Mid$(FileLine(LineCount), V, I - V) + "." + Str$(UpdateValue)
-            FileLine(LineCount) = Left$(FileLine(LineCount), I) + Str$(UpdateValue) ' Put back new version
+            VersionText = VersionText + LTrim$(Str$(UpdateValue))
+            FileLine(LineCount) = TargetSourceLine + VersionText + Quote ' Put back new version
             TargetSourceLineCount = LineCount ' Don't need to look again
             _Continue
         End If
@@ -202,10 +198,10 @@ While Not EOF(InF)
             Print "DBG04-opt windows ver"
         $End If
         $If PROD = UNDEFINED Then
-            Print "DBG41-UpdateLevel="; UpdateLevel
+            Print "DBG41-versiontext="; VersionText
         $End If
         If InStr(FileLine(LineCount), TargetFileVersion) Then
-            FileLine(LineCount) = TargetFileVersion + "'" + UpdateLevel + "'"
+            FileLine(LineCount) = TargetFileVersion + "'" + VersionText + "'"
             TargetFileVerCount = LineCount
             _Continue
         End If
@@ -225,7 +221,6 @@ While Not EOF(InF)
     End If
     $If PROD = UNDEFINED Then
         Print "DBG10A-Linecount="; LineCount
-        Print "dbg10B-UpdateLevel="; UpdateLevel
         Print "DBG10-Pause"
         Input I
     $End If
