@@ -330,8 +330,13 @@ Sub Help
     Print
     Print "     When the ";: Color AltColor: Print "display window ";
     Color SpecColor: Print "is clicked on, Autocommit will add one to"
-    Print "     the revision number and make a request to git of a commit of all files"
-    Print "     changed since the last commit."
+    Print "     the revision number, update version and date (if present), replace"
+    Color AltColor: Print "     "; TargetFile;
+    Color SpecColor:
+    Print ", and make a request to git of a commit of all files"
+    Print "     changed since the last commit. It will then wait to be clicked on again,"
+    Print "     click the close box in the top right corner of the window, or press"
+    Print "     Alt-F4 to close."
     End
 End Sub
 
