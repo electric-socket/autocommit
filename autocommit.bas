@@ -45,7 +45,7 @@ GitCommand = "commit -m " + Quote + "Revision " '   Start of command to give Git
 _PaletteColor 3, _RGB32(255, 167, 0) ' Orange
 Color 14 ' Yellow
 Dim As String FileLine, Target, UpdateLevel
-Dim As Integer InF, OutF, I, S, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly
+Dim As Integer InF, OutF, I, S, V, LineCount, NewLineCount, TargetSourceLineCount, TargetDateLineCount, UpdateValue, TargetFileVerCount, TargetDayLineCount, ReadOnly, Temp
 
 ' Setup for creatimg new file
 Read NewLineCount
@@ -156,17 +156,14 @@ While Not EOF(InF)
             $If PROD = UNDEFINED Then
                 Print "DBG23-Found ver"
             $End If
-            I = I + Len(TargetSourceLine)
-            S = I + 1 ' Char after first quote
+            I = I + Len(TargetSourceLine) ' Char after first quote
+            V = InStr(S, FileLine(LineCount), Quote) - 1 ' Char before last quote
+            S = V - I + 1
             $If PROD = UNDEFINED Then
-                Print "DBG24-1st "; Quote; "="; I; " VerStart="; S; " Ver-1st="; S - I
+                Print "DBG24-Verstart="; I; " VerEnd="; S; "Len="; S
+                Input "press enter"; Temp
             $End If
 
-            I = _InStrRev(FileLine(LineCount), ".") ' Find last period
-            V = InStr(S, FileLine(LineCount), Quote) - 1 ' Char before last quote
-            $If PROD = UNDEFINED Then
-                Print "DBG25-last .="; I; " BeforeLast "; Quote; " ="; V
-            $End If
 
             UpdateLevel = Mid$(FileLine(LineCount), S, V - S) ' Pull off revision strimg
             $If PROD = UNDEFINED Then
