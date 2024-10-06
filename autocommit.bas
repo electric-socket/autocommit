@@ -159,25 +159,25 @@ While Not EOF(InF)
             I = I + Len(TargetSourceLine)
             S = I + 1 ' Char after first quote
             $If PROD = UNDEFINED Then
-                Print "DBG24-1st "; Quote; "="; I; " VerStart="; V
+                Print "DBG24-1st "; Quote; "="; I; " VerStart="; S; " Ver-1st="; S - I
             $End If
 
             I = _InStrRev(FileLine(LineCount), ".") ' Find last period
             V = InStr(S, FileLine(LineCount), Quote) - 1 ' Char before last quote
             $If PROD = UNDEFINED Then
-                Print "DBG24-last .="; I; " BeforeLast ";quote;" ="; V
+                Print "DBG25-last .="; I; " BeforeLast "; Quote; " ="; V
             $End If
 
             UpdateLevel = Mid$(FileLine(LineCount), S, V - S) ' Pull off revision strimg
             $If PROD = UNDEFINED Then
-                Print "DBG24-UpdateLevel="; UpdateLevel
+                Print "DBG26-UpdateLevel="; UpdateLevel
             $End If
 
             UpdateValue = Val(UpdateLevel) ' Extract revision value
             If Not ReadOnly Then UpdateValue = UpdateValue + 1 ' Imcrement revision no.
             ' No longer need updatelevel, reuse
             $If PROD = UNDEFINED Then
-                Print "DBG25-UpdateValue="; UpdateValue
+                Print "DBG26-UpdateValue="; UpdateValue
             $End If
 
             UpdateLevel = Mid$(FileLine(LineCount), V, I - V) + "." + Str$(UpdateValue)
