@@ -1,4 +1,4 @@
-' Unciomment next line for production
+' Uncomment next line for production
 '$let prod=1
 Option _Explicit
 ' Autocommit by Paul Robinson
@@ -79,7 +79,7 @@ Cls
 
 Print "ÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·"
 Print "º Current Version º"
-Print "º "; Right$(Space$(16) + VersionText, 16); " º"
+Print "º "; Right$(Space$(15) + VersionText, 15); " º"
 Print "º   Click here    º"
 Print "º    to commit    º"
 Print "º                 º"
@@ -90,9 +90,9 @@ Do
     If _MouseInput Then
         If _MouseButton(1) Then
             ' Do something
-            Locate 1, 10
+            Locate 10, 1
             Print "Committing..."
-
+            Input I
             ' Print Version No.
             Locate 3, 3
 
@@ -131,32 +131,13 @@ TargetDayLineCount = 0
 LineCount = 0
 While Not EOF(InF)
     LineCount = LineCount + 1
-    $If PROD = UNDEFINED Then
-        Print "DBG01";
-        If ReadOnly Then Print " (R/O)";
-        Print "-reading record #"; LineCount
-    $End If
     ReDim _Preserve FileLine(LineCount)
     Line Input #InF, FileLine(LineCount)
-    $If PROD = UNDEFINED Then
-        Print "DBG11-Linecount="; LineCount
-        Print "DBG12-FileLine(LineCount)="; FileLine(LineCount)
-    $End If
 
     ' Version No. / revision no. should be ahead of any other declarations
     If Not TargetSourceLineCount Then 'Have not found it
-        $If PROD = UNDEFINED Then
-            Print "DBG02-target check"
-        $End If
         I = InStr(UCase$(FileLine(LineCount)), UCase$(TargetSourceLine))
-        $If PROD = UNDEFINED Then
-            Print "DBG21-TargetSourceLine="; TargetSourceLine
-        $End If
-
         If I Then ' Found version
-            $If PROD = UNDEFINED Then
-                Print "DBG23-Found ver"
-            $End If
             ' Extract version number
             I = I + Len(TargetSourceLine) ' Char after first quote
             V = InStr(I, FileLine(LineCount), Quote) - 1 ' Char before last quote
@@ -169,10 +150,6 @@ While Not EOF(InF)
             VersionText = Left$(VersionText, I) ' All through last period
             UpdateValue = Val(Revision) ' Extract revision value
             If Not ReadOnly Then UpdateValue = UpdateValue + 1 ' Imcrement revision no.
-            ' No longer need updatelevel, reuse
-            $If PROD = UNDEFINED Then
-                Print "DBG26-UpdateValue="; UpdateValue
-            $End If
 
             VersionText = VersionText + LTrim$(Str$(UpdateValue))
             FileLine(LineCount) = TargetSourceLine + VersionText + Quote ' Put back new version
@@ -181,26 +158,13 @@ While Not EOF(InF)
         End If
     End If ' optional: Compile date, always replaced with todays date
     If Not TargetDateLineCount Then
-        $If PROD = UNDEFINED Then
-            Print "DBG03-date check"
-        $End If
         If InStr(FileLine(LineCount), TargetDateLine) Then
-            $If PROD = UNDEFINED Then
-                Print "DBG31-TodaysDate="; TodaysDate
-            $End If
-
-            FileLine(LineCount) = TargetDateLine + Quote + TodaysDate + Quote ' Replace with today
+            FileLine(LineCount) = TargetDateLine + TodaysDate + Quote ' Replace with today
             TargetDateLineCount = LineCount ' Don't need to look again
             _Continue
         End If
     End If ' opional: version number for Windows
     If Not TargetFileVerCount Then
-        $If PROD = UNDEFINED Then
-            Print "DBG04-opt windows ver"
-        $End If
-        $If PROD = UNDEFINED Then
-            Print "DBG41-versiontext="; VersionText
-        $End If
         If InStr(FileLine(LineCount), TargetFileVersion) Then
             FileLine(LineCount) = TargetFileVersion + "'" + VersionText + "'"
             TargetFileVerCount = LineCount
@@ -208,58 +172,24 @@ While Not EOF(InF)
         End If
     End If 'Optional: Day of week
     If Not TargetDayLineCount Then
-        $If PROD = UNDEFINED Then
-            Print "DBG05-opt day"
-        $End If
         If InStr(FileLine(LineCount), TargetDayLine) Then
-            $If PROD = UNDEFINED Then
-                Print "DBG51-TodaysDay="; TodaysDay
-            $End If
-
-            FileLine(LineCount) = TargetDayLine + Quote + TodaysDay + Quote
+            FileLine(LineCount) = TargetDayLine + TodaysDay + Quote
             TargetDayLineCount = LineCount
         End If
     End If
-    $If PROD = UNDEFINED Then
-        Print "DBG10A-Linecount="; LineCount
-        Print "DBG10-Pause"
-        Input I
-    $End If
-
 Wend
 Close #InF
 
-
-$If PROD = UNDEFINED Then
-    Print "DBG06-rewrite"
-$Else
-    If ReadOnly Then Return
-$End If
+If ReadOnly Then Return
 
 ' rewrite change
-$If PROD = UNDEFINED Then
-    Print "DBG61-Write Example"
-    If Not ReadOnly Then Open TargetFile For Output As #OutF
-$Else
-    Open TargetFile For Output As #OutF
-$End If
+Open TargetFile For Output As #OutF
+
 For I = 1 To LineCount
-    $If PROD = UNDEFINED Then
-        Print FileLine(I)
-    $Else
-        Print #OutF, FileLine(I)
-    $End If
+    Print #OutF, FileLine(I)
 Next
-
-$If PROD = UNDEFINED Then
-    Print "DBG99-PAUSE"
-    Input I
-$Else
-    Close #OutF
-$End If
-
+Close #OutF
 Return
-
 
 
 ' Primary Error handler
